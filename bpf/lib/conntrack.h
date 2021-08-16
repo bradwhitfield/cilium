@@ -575,32 +575,12 @@ static __always_inline void ct4_cilium_dbg_tuple(struct __ctx_buff *ctx, __u8 ty
 	cilium_dbg(ctx, type, addr, rev_nat_index);
 }
 
-/* Offset must point to IPv4 header */
-static __always_inline int ct_lookup4(const void *map,
-				      struct ipv4_ct_tuple *tuple,
-				      struct __ctx_buff *ctx, int off, int dir,
-				      struct ct_state *ct_state, __u32 *monitor)
+static __always_inline int
+ct_extract_ports4(struct __ctx_buff *ctx, int off, int dir,
+		  struct ipv4_ct_tuple *tuple, int *action,
+		  union tcp_flags *tcp_flags, bool *has_l4_header)
 {
-	int err, ret = CT_NEW, action = ACTION_UNSPEC;
-	bool is_tcp = tuple->nexthdr == IPPROTO_TCP,
-	     has_l4_header = true;
-	union tcp_flags tcp_flags = { .value = 0 };
-
-	/* The tuple is created in reverse order initially to find a
-	 * potential reverse flow. This is required because the RELATED
-	 * or REPLY state takes precedence over ESTABLISHED due to
-	 * policy requirements.
-	 *
-	 * tuple->flags separates entries that could otherwise be overlapping.
-	 */
-	if (dir == CT_INGRESS)
-		tuple->flags = TUPLE_F_OUT;
-	else if (dir == CT_EGRESS)
-		tuple->flags = TUPLE_F_IN;
-	else if (dir == CT_SERVICE)
-		tuple->flags = TUPLE_F_SERVICE;
-	else
-		return DROP_CT_INVALID_HDR;
+	int err;
 
 	switch (tuple->nexthdr) {
 	case IPPROTO_ICMP:
@@ -632,25 +612,25 @@ static __always_inline int ct_lookup4(const void *map,
 				tuple->dport = identifier;
 				/* fall through */
 			default:
-				action = ACTION_CREATE;
+				*action = ACTION_CREATE;
 				break;
 			}
 		}
 		break;
 
 	case IPPROTO_TCP:
-		err = ipv4_ct_extract_l4_ports(ctx, off, dir, tuple, &has_l4_header);
+		err = ipv4_ct_extract_l4_ports(ctx, off, dir, tuple, has_l4_header);
 		if (err < 0)
 			return err;
 
-		action = ACTION_CREATE;
+		*action = ACTION_CREATE;
 
 		if (has_l4_header) {
-			if (ctx_load_bytes(ctx, off + 12, &tcp_flags, 2) < 0)
+			if (ctx_load_bytes(ctx, off + 12, tcp_flags, 2) < 0)
 				return DROP_CT_INVALID_HDR;
 
-			if (unlikely(tcp_flags.value & (TCP_FLAG_RST|TCP_FLAG_FIN)))
-				action = ACTION_CLOSE;
+			if (unlikely(tcp_flags->value & (TCP_FLAG_RST|TCP_FLAG_FIN)))
+				*action = ACTION_CLOSE;
 		}
 		break;
 
@@ -659,13 +639,48 @@ static __always_inline int ct_lookup4(const void *map,
 		if (err < 0)
 			return err;
 
-		action = ACTION_CREATE;
+		*action = ACTION_CREATE;
 		break;
 
 	default:
 		/* Can't handle extension headers yet */
 		return DROP_CT_UNKNOWN_PROTO;
 	}
+
+	return 0;
+}
+
+/* Offset must point to IPv4 header */
+static __always_inline int ct_lookup4(const void *map,
+				      struct ipv4_ct_tuple *tuple,
+				      struct __ctx_buff *ctx, int off, int dir,
+				      struct ct_state *ct_state, __u32 *monitor)
+{
+	int err, ret = CT_NEW, action = ACTION_UNSPEC;
+	bool is_tcp = tuple->nexthdr == IPPROTO_TCP,
+	     has_l4_header = true;
+	union tcp_flags tcp_flags = { .value = 0 };
+
+	/* The tuple is created in reverse order initially to find a
+	 * potential reverse flow. This is required because the RELATED
+	 * or REPLY state takes precedence over ESTABLISHED due to
+	 * policy requirements.
+	 *
+	 * tuple->flags separates entries that could otherwise be overlapping.
+	 */
+	if (dir == CT_INGRESS)
+		tuple->flags = TUPLE_F_OUT;
+	else if (dir == CT_EGRESS)
+		tuple->flags = TUPLE_F_IN;
+	else if (dir == CT_SERVICE)
+		tuple->flags = TUPLE_F_SERVICE;
+	else
+		return DROP_CT_INVALID_HDR;
+
+	err = ct_extract_ports4(ctx, off, dir,
+				tuple, &action, &tcp_flags, &has_l4_header);
+	if (err < 0)
+		return err;
 
 	/* Lookup the reverse direction
 	 *
