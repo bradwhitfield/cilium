@@ -650,6 +650,32 @@ ct_extract_ports4(struct __ctx_buff *ctx, int off, int dir,
 	return 0;
 }
 
+/* The function determines whether an egress flow identified by the given
+ * tuple is a reply.
+ *
+ * The datapath creates a CT entry in a reverse order. E.g., if a pod sends a
+ * request to outside, the CT entry stored in the BPF map will be TUPLE_F_IN:
+ * pod => outside. So, we can leverage this fact to determine whether the given
+ * flow is a reply.
+ */
+static __always_inline int
+ct_is_reply4(const void *map, struct __ctx_buff *ctx, int off,
+	     struct ipv4_ct_tuple *tuple, bool *is_reply)
+{
+	int err = 0, action = ACTION_UNSPEC;
+
+	err = ct_extract_ports4(ctx, off, CT_EGRESS,
+				tuple, &action, NULL, NULL);
+	if (err < 0)
+		return err;
+
+	tuple->flags = TUPLE_F_IN;
+
+	*is_reply = map_lookup_elem(map, tuple) != NULL;
+
+	return 0;
+}
+
 /* Offset must point to IPv4 header */
 static __always_inline int ct_lookup4(const void *map,
 				      struct ipv4_ct_tuple *tuple,
@@ -950,6 +976,15 @@ ct_lookup6(const void *map __maybe_unused,
 	   struct __ctx_buff *ctx __maybe_unused, int off __maybe_unused,
 	   int dir __maybe_unused, struct ct_state *ct_state __maybe_unused,
 	   __u32 *monitor __maybe_unused)
+{
+	return 0;
+}
+
+static __always_inline int
+ct_is_reply4(const void *map __maybe_unused,
+	     struct __ctx_buff *ctx __maybe_unused, int off __maybe_unused,
+	     struct ipv4_ct_tuple *tuple __maybe_unused,
+	     bool *is_reply __maybe_unused)
 {
 	return 0;
 }
