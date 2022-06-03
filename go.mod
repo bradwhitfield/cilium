@@ -33,10 +33,10 @@ require (
 	github.com/docker/libnetwork v0.0.0-20190128195551-d8d4c8cf03d7
 	github.com/fsnotify/fsnotify v1.4.10-0.20200417215612-7f4cf4dd2b52
 	github.com/go-openapi/errors v0.20.0
-	github.com/go-openapi/loads v0.20.2
+	github.com/go-openapi/loads v0.21.1
 	github.com/go-openapi/runtime v0.19.30
-	github.com/go-openapi/spec v0.20.3
-	github.com/go-openapi/strfmt v0.20.0
+	github.com/go-openapi/spec v0.20.4
+	github.com/go-openapi/strfmt v0.21.0
 	github.com/go-openapi/swag v0.19.15
 	github.com/go-openapi/validate v0.20.2
 	github.com/gogo/protobuf v1.3.2
@@ -82,7 +82,7 @@ require (
 	go.etcd.io/etcd/api/v3 v3.5.0
 	go.etcd.io/etcd/client/pkg/v3 v3.5.0
 	go.etcd.io/etcd/client/v3 v3.5.0
-	go.mongodb.org/mongo-driver v1.5.1 // indirect
+	go.mongodb.org/mongo-driver v1.7.3 // indirect
 	go.uber.org/goleak v1.1.10
 	go.universe.tf/metallb v0.10.0
 	golang.org/x/crypto v0.0.0-20210503195802-e9a32991a82e
@@ -148,9 +148,9 @@ require (
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
 	github.com/go-logr/logr v0.4.0 // indirect
 	github.com/go-ole/go-ole v1.2.5 // indirect
-	github.com/go-openapi/analysis v0.20.0 // indirect
+	github.com/go-openapi/analysis v0.21.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
-	github.com/go-openapi/jsonreference v0.19.5 // indirect
+	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gobuffalo/flect v0.2.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
@@ -185,6 +185,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.4 // indirect
+	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
@@ -205,7 +206,7 @@ require (
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20210427022245-097af6e1351b // indirect
 	google.golang.org/appengine v1.6.7 // indirect
